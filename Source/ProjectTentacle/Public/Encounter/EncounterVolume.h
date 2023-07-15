@@ -85,10 +85,10 @@ protected:
 
 	
 	
-	// Set of all contained units at any time
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	bool IsPlayerInsideEncounter = false;
 	
+	// Set of all contained units at any time
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	TSet<AEnemyBase*> ContainedUnits;
 

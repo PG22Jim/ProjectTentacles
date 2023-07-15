@@ -12,6 +12,7 @@
 #include "Characters/Enemies/UnitPool.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Encounter/SpawnPoint.h"
+#include "Kismet/GameplayStatics.h"
 
 FTimerManager* AEncounterVolume::WorldTimerManager = nullptr;
 // Sets default values
@@ -89,7 +90,23 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bF
 	if(ContainedUnits.Num() <= 0 && AllSpawnsComplete())
 	{
 		bIsEncounterComplete = true;
-		if(EncounterComplete.IsBound()) EncounterComplete.Broadcast();
+		if(EncounterComplete.IsBound())
+		{
+			EncounterComplete.Broadcast();
+			if(UWorld* World = GetWorld())
+			{
+				ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(World, 0);
+				if(!PlayerCha) return;
+
+				// check if owner class has character action interface
+				if(PlayerCha->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+				{
+					// if it has character action interface, it means its base character, execute its SwitchToIdleState function
+					ICharacterActionInterface::Execute_OnEnterOrExitCombat(PlayerCha, false);
+				}
+			}
+
+		}
 	}
 
 	if(bForceDespawn)
@@ -160,6 +177,7 @@ void AEncounterVolume::OnActorHitTriggerCollision(UPrimitiveComponent* Overlappe
 	
 	if(!CastPlayer) return;
 
+	CastPlayer->OnEnterOrExitCombat_Implementation(true);
 	IsPlayerInsideEncounter = true;
 	CollisionMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 }
