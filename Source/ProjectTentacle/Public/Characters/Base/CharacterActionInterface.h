@@ -71,6 +71,9 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnMakingTentacleVisible(bool bShowTentacle);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnEnterOrExitCombat(bool bEnterCombat);
 	
 	
 	// Enemy Delegate

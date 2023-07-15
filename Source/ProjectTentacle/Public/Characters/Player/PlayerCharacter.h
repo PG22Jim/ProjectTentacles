@@ -94,6 +94,9 @@ private:
 	void TryCacheGameModeRef();
 	void TryCacheInstanceRef();
 
+	void SwitchToNormalCamera();
+	void SwitchToCombatCamera();
+
 	bool HasSpaceToLand(FVector KnockingDir);
 	
 	FTimeline TentacleAppearingTimeline;
@@ -137,12 +140,21 @@ protected:
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* ShoulderViewSpringArm;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CombatSpringArm;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* ExecutionSpringArm;
 	
 	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* NormalCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UChildActorComponent* NormalCameraChild;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CombatCamera;
 
@@ -446,4 +458,7 @@ public:
 
 	UFUNCTION()
 	virtual void OnMakingTentacleVisible_Implementation(bool bShowTentacle) override;
+
+	UFUNCTION()
+	virtual void OnEnterOrExitCombat_Implementation(bool bEnterCombat) override;
 };

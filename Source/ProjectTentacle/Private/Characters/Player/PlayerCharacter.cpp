@@ -83,6 +83,13 @@ void APlayerCharacter::CreatCameraComponents()
 	UCapsuleComponent* PlayerCapsule = GetCapsuleComponent();
 	
 	// Create a camera boom (pulls in towards the player if there is a collision)
+	ShoulderViewSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ShoulderViewSpringArm"));
+	ShoulderViewSpringArm->SetupAttachment(PlayerCapsule);
+	//CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
+	ShoulderViewSpringArm->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	ShoulderViewSpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+
+	// Create a camera boom (pulls in towards the player if there is a collision)
 	CombatSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CombatSpringArm"));
 	CombatSpringArm->SetupAttachment(PlayerCapsule);
 	//CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
@@ -94,6 +101,15 @@ void APlayerCharacter::CreatCameraComponents()
 	//ActionSpringArmComp->SetupAttachment(PlayerSkeletonMeshComp, "Spine2");
 	ExecutionSpringArm->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	ExecutionSpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+
+
+	// Create a shoulder view camera
+	NormalCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("NormalCamera"));
+	NormalCamera->SetupAttachment(ShoulderViewSpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	NormalCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	
+	NormalCameraChild = CreateDefaultSubobject<UChildActorComponent>(TEXT("NormalCameraChild"));
+	NormalCameraChild->SetupAttachment(NormalCamera, USpringArmComponent::SocketName);
 
 	
 	// Create a combat camera
@@ -185,6 +201,8 @@ void APlayerCharacter::BeginPlay()
 	
 	TryCacheInstanceRef();
 	if(InstanceRef && InstanceRef->ShouldSaveAtPCSpawn()) InstanceRef->SaveGame();
+
+	OnEnterOrExitCombat_Implementation(true);
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -373,15 +391,16 @@ void APlayerCharacter::UnsetCurrentTarget()
 
 void APlayerCharacter::DebugTestFunction()
 {
-	if(!DebugingBool)
+	if(DebugingBool)
 	{
-		TentacleMaterialChangingTimeline.PlayFromStart();
-		DebugingBool = true;
+		DebugingBool = false;
+		SwitchToNormalCamera();
+		
 	}
 	else
 	{
-		TentacleMaterialChangingTimeline.ReverseFromEnd();
-		DebugingBool = false;
+		DebugingBool = true;
+		SwitchToCombatCamera();
 	}
 }
 
@@ -485,6 +504,22 @@ void APlayerCharacter::TryCacheInstanceRef()
 	if(InstanceRef) return;
 
 	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
+}
+
+void APlayerCharacter::SwitchToNormalCamera()
+{
+	if(!PlayerCurrentController) TryCachePlayerController();
+	
+	PlayerCurrentController->SetViewTargetWithBlend(NormalCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
+
+}
+
+void APlayerCharacter::SwitchToCombatCamera()
+{
+	if(!PlayerCurrentController) TryCachePlayerController();
+	
+	PlayerCurrentController->SetViewTargetWithBlend(CombatCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
+
 }
 
 bool APlayerCharacter::HasSpaceToLand(FVector KnockingDir)
@@ -700,6 +735,18 @@ void APlayerCharacter::OnMakingTentacleVisible_Implementation(bool bShowTentacle
 
 	if(bShowTentacle) TentacleMaterialChangingTimeline.PlayFromStart();
 	else TentacleMaterialChangingTimeline.ReverseFromEnd();
+}
+
+void APlayerCharacter::OnEnterOrExitCombat_Implementation(bool bEnterCombat)
+{
+	Super::OnEnterOrExitCombat_Implementation(bEnterCombat);
+
+	if(bEnterCombat)
+		SwitchToCombatCamera();
+	else
+		SwitchToNormalCamera();	
+
+
 }
 
 
