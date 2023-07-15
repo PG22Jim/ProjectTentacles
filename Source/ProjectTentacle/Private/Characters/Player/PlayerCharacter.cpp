@@ -82,12 +82,12 @@ void APlayerCharacter::CreatCameraComponents()
 
 	UCapsuleComponent* PlayerCapsule = GetCapsuleComponent();
 	
-	// Create a camera boom (pulls in towards the player if there is a collision)
-	ShoulderViewSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ShoulderViewSpringArm"));
-	ShoulderViewSpringArm->SetupAttachment(PlayerCapsule);
-	//CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
-	ShoulderViewSpringArm->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	ShoulderViewSpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	// // Create a camera boom (pulls in towards the player if there is a collision)
+	// ShoulderViewSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ShoulderViewSpringArm"));
+	// ShoulderViewSpringArm->SetupAttachment(PlayerCapsule);
+	// //CameraBoom->SetupAttachment(PlayerSkeletonMeshComp, "Spine");
+	// ShoulderViewSpringArm->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	// ShoulderViewSpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CombatSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CombatSpringArm"));
@@ -103,13 +103,13 @@ void APlayerCharacter::CreatCameraComponents()
 	ExecutionSpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 
-	// Create a shoulder view camera
-	NormalCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("NormalCamera"));
-	NormalCamera->SetupAttachment(ShoulderViewSpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	NormalCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-	
-	NormalCameraChild = CreateDefaultSubobject<UChildActorComponent>(TEXT("NormalCameraChild"));
-	NormalCameraChild->SetupAttachment(NormalCamera, USpringArmComponent::SocketName);
+	// // Create a shoulder view camera
+	// NormalCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("NormalCamera"));
+	// NormalCamera->SetupAttachment(ShoulderViewSpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	// NormalCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	//
+	// NormalCameraChild = CreateDefaultSubobject<UChildActorComponent>(TEXT("NormalCameraChild"));
+	// NormalCameraChild->SetupAttachment(NormalCamera, USpringArmComponent::SocketName);
 
 	
 	// Create a combat camera
@@ -150,6 +150,12 @@ void APlayerCharacter::TimelineInitialization()
 	
 	CameraSwitchingTimeline.AddInterpFloat(CameraRotationCurve, CameraRotationUpdate);
 	CameraSwitchingTimeline.SetTimelineFinishedFunc(CameraRotationFinish);
+
+
+	FOnTimelineFloat CombatCameraSwitchUpdate;
+	CombatCameraSwitchUpdate.BindDynamic(this, &APlayerCharacter::OnEnterCombatCameraUpdate);
+	CombatCameraSwitchTimeline.AddInterpFloat(CameraSwitchingCurve, CombatCameraSwitchUpdate);
+	
 
 	FOnTimelineFloat TentacleMaterialUpdate;
 	TentacleMaterialUpdate.BindDynamic(this, &APlayerCharacter::OnUpdateTentacleMaterial);
@@ -202,7 +208,7 @@ void APlayerCharacter::BeginPlay()
 	TryCacheInstanceRef();
 	if(InstanceRef && InstanceRef->ShouldSaveAtPCSpawn()) InstanceRef->SaveGame();
 
-	OnEnterOrExitCombat_Implementation(true);
+	InCombatCameraSocketOffset = CombatSpringArm->SocketOffset;
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -211,6 +217,7 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 
 	// time line tick
 	CameraSwitchingTimeline.TickTimeline(DeltaSeconds);
+	CombatCameraSwitchTimeline.TickTimeline(DeltaSeconds);
 	
 	const float DeltaWithSpeedBonus = DeltaSeconds * UpdatedAttackingSpeedBonus;
 	TentacleMaterialChangingTimeline.TickTimeline(DeltaWithSpeedBonus);
@@ -394,13 +401,13 @@ void APlayerCharacter::DebugTestFunction()
 	if(DebugingBool)
 	{
 		DebugingBool = false;
-		SwitchToNormalCamera();
+		CameraSwitch_ShoulderView();
 		
 	}
 	else
 	{
 		DebugingBool = true;
-		SwitchToCombatCamera();
+		CameraSwitch_CombatView();
 	}
 }
 
@@ -425,6 +432,12 @@ void APlayerCharacter::OnCancelTentacleMaterialChange()
 
 	TentacleMaterialChangingTimeline.Stop();
 	TentacleOnRightHand->SetTentacleInvisible();
+}
+
+void APlayerCharacter::OnEnterCombatCameraUpdate(float Alpha)
+{
+	const FVector CurrentSocketOffset = UKismetMathLibrary::VLerp(ShoulderViewSocketOffset, InCombatCameraSocketOffset, Alpha);
+	CombatSpringArm->SocketOffset = CurrentSocketOffset;
 }
 
 void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
@@ -506,20 +519,16 @@ void APlayerCharacter::TryCacheInstanceRef()
 	InstanceRef = Cast<UProjectTentacleGameInstance>(GetWorld()->GetGameInstance());
 }
 
-void APlayerCharacter::SwitchToNormalCamera()
+void APlayerCharacter::CameraSwitch_ShoulderView()
 {
-	if(!PlayerCurrentController) TryCachePlayerController();
-	
-	PlayerCurrentController->SetViewTargetWithBlend(NormalCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
+	//
+	CombatCameraSwitchTimeline.ReverseFromEnd();
 
 }
 
-void APlayerCharacter::SwitchToCombatCamera()
+void APlayerCharacter::CameraSwitch_CombatView()
 {
-	if(!PlayerCurrentController) TryCachePlayerController();
-	
-	PlayerCurrentController->SetViewTargetWithBlend(CombatCameraChild->GetChildActor(), CameraMoveTime, EViewTargetBlendFunction::VTBlend_EaseInOut, 1.0, false);
-
+	CombatCameraSwitchTimeline.PlayFromStart();
 }
 
 bool APlayerCharacter::HasSpaceToLand(FVector KnockingDir)
@@ -742,9 +751,12 @@ void APlayerCharacter::OnEnterOrExitCombat_Implementation(bool bEnterCombat)
 	Super::OnEnterOrExitCombat_Implementation(bEnterCombat);
 
 	if(bEnterCombat)
-		SwitchToCombatCamera();
+		CameraSwitch_CombatView();
 	else
-		SwitchToNormalCamera();	
+	{
+		CameraSwitch_ShoulderView();	
+		ClearCounteringTarget();
+	}
 
 
 }

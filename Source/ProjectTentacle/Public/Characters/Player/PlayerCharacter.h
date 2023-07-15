@@ -94,12 +94,13 @@ private:
 	void TryCacheGameModeRef();
 	void TryCacheInstanceRef();
 
-	void SwitchToNormalCamera();
-	void SwitchToCombatCamera();
+	void CameraSwitch_ShoulderView();
+	void CameraSwitch_CombatView();
 
 	bool HasSpaceToLand(FVector KnockingDir);
 	
 	FTimeline TentacleAppearingTimeline;
+	FTimeline CombatCameraSwitchTimeline;
 	
 	class AProjectTentacleGameModeBase* GameModeRef;
 	class UProjectTentacleGameInstance* InstanceRef;
@@ -116,6 +117,9 @@ private:
 	void TentacleAttachment();
 
 	float UpdatedAttackingSpeedBonus = 1.0f;
+
+	FVector InCombatCameraSocketOffset;
+
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
@@ -139,8 +143,8 @@ protected:
 	
 	
 	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* ShoulderViewSpringArm;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	// class USpringArmComponent* ShoulderViewSpringArm;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CombatSpringArm;
@@ -149,11 +153,11 @@ protected:
 	class USpringArmComponent* ExecutionSpringArm;
 	
 	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* NormalCamera;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	// class UCameraComponent* NormalCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UChildActorComponent* NormalCameraChild;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	// class UChildActorComponent* NormalCameraChild;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CombatCamera;
@@ -192,11 +196,18 @@ protected:
 	UPROPERTY()
 	EPlayerAttackAnimations CurrentAttackingAnim;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSetting)
 	float CameraMoveTime = 0.2f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= ExecutionCameraSetting)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSetting)
 	UCurveFloat* CameraRotationCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSetting)
+	UCurveFloat* CameraSwitchingCurve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSetting)
+	FVector ShoulderViewSocketOffset = FVector(0,0,0);
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= TentacleAttachingSetting)
 	UCurveFloat* MaterialChangingCurve;
@@ -366,6 +377,9 @@ public:
 	void OnUpdateTentacleMaterial(float Alpha);
 
 	void OnCancelTentacleMaterialChange();
+
+	UFUNCTION()
+	void OnEnterCombatCameraUpdate(float Alpha);
 	
 	
 	// ================================================= Get And Set Functions ============================================
