@@ -94,8 +94,6 @@ private:
 	void TryCacheGameModeRef();
 	void TryCacheInstanceRef();
 
-	void CameraSwitch_ShoulderView();
-	void CameraSwitch_CombatView();
 
 	bool HasSpaceToLand(FVector KnockingDir);
 	
@@ -317,6 +315,12 @@ public:
 	
 	APlayerCharacter();
 
+	UFUNCTION(BlueprintCallable)
+	void CameraSwitch_ShoulderView();
+	
+	UFUNCTION(BlueprintCallable)
+	void CameraSwitch_CombatView();
+	
 	// ================================================= 
 	
 	virtual void BeginPlay() override;
@@ -380,7 +384,9 @@ public:
 
 	UFUNCTION()
 	void OnEnterCombatCameraUpdate(float Alpha);
-	
+
+
+	// ================================================= Debug ============================================================
 	
 	// ================================================= Get And Set Functions ============================================
 	bool GetAbleRotateVision() const {return AbleRotateVision;}
