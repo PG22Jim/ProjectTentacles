@@ -581,6 +581,8 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	Super::DamagingTarget_Implementation();
 
 	if(DamagingActor == nullptr) return;
+
+	
 	
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, bIsOHKOEnabled ? OHKODamage: CurrentDamage, this, CurrentAttackType);
 

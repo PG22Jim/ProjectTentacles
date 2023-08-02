@@ -112,6 +112,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* BoneBreakSound;
+
+	
 	bool IsDead = false;
 
 	// bool to check if enemy is in attack task
@@ -193,6 +198,8 @@ protected:
 	
 	// ===================================================== Receive Damage =================================================
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
+
+	void PlayReceiveDamageSound();
 	
 	void HealthReduction(float DamageAmount);
 	

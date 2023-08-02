@@ -8,6 +8,7 @@
 #include "PlayerCameraInterface.h"
 #include "PlayerDamageInterface.h"
 #include "Characters/Base/BaseCharacter.h"
+#include "Characters/Base/VFXAndSoundInterface.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -71,7 +72,7 @@ DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IPlayerDamageInterface, public IPlayerCameraInterface
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IPlayerDamageInterface, public IPlayerCameraInterface, public IVFXAndSoundInterface
 {
 	GENERATED_BODY()
 
@@ -267,6 +268,14 @@ protected:
 
 	// Timer Handle for resume simulate physics setting
 	FTimerHandle ResumeSimulatePhysicTimer;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* BoneBreakingSound;
+
+
+	
+
 	
 	
 	// input key variables to check
@@ -389,6 +398,9 @@ public:
 	// ================================================= Debug ============================================================
 	
 	// ================================================= Get And Set Functions ============================================
+
+	USoundBase* GetBoneBreakSound() const {return BoneBreakingSound;}
+	
 	bool GetAbleRotateVision() const {return AbleRotateVision;}
 	
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}

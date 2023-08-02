@@ -15,6 +15,13 @@ class PROJECTTENTACLE_API AEnemyRanged : public AEnemyBase, public IEnemyRangeIn
 {
 	GENERATED_BODY()
 
+private:
+
+	AActor* RifleActor;
+
+	UStaticMeshComponent* RifleMeshRef;
+
+	
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
@@ -35,13 +42,26 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
 	UAnimMontage* StandUpAnim;
 
+
+	
+
+	
 	
 	FTimerHandle AimingTimerHandle;
 	FTimerHandle CheckInSightTimerHandle;
 
-	float CheckInSightTick = 0.01f; 
-	
+	float CheckInSightTick = 0.01f;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* RifleReloadSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* RifleFireSound;
+
+
+	
 	UFUNCTION()
 	void BeginFire();
 
@@ -52,6 +72,9 @@ protected:
 
 public:
 
+
+	UFUNCTION(BlueprintCallable)
+	void InitializeRifleMeshRef(UStaticMeshComponent* NewRifleMeshRef) {RifleMeshRef = NewRifleMeshRef;}
 
 	virtual void ExecuteAttack() override;
 
@@ -65,7 +88,7 @@ public:
 
 	virtual void ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
-	
+	virtual void OnReloading_Implementation() override;
 
 private:
 

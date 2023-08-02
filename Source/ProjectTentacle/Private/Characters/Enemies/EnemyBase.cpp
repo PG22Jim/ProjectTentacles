@@ -56,8 +56,9 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 			TryGetOwnController();
 			OwnController->RegisterCompletedAttack();
 		}
-
 	}
+
+	PlayReceiveDamageSound();
 
 	if(Health > 0)
 	{
@@ -357,9 +358,11 @@ void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType
 	}
 }
 
-
-
-
+void AEnemyBase::PlayReceiveDamageSound()
+{
+	if(BoneBreakSound)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), BoneBreakSound, GetActorLocation());
+}
 
 
 void AEnemyBase::TryClearFromPlayerTarget()

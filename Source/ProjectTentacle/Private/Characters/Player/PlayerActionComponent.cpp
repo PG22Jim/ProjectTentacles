@@ -7,6 +7,7 @@
 #include "Characters/Player/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Encounter/SwampWater.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -1017,6 +1018,10 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 			if(ResumeMovementDamagingActor)
 				ResumeMovementDamagingActor->TryResumeMoving();
 		}
+
+		USoundBase* BoneBreakSound = PlayerOwnerRef->GetBoneBreakSound();
+		if(BoneBreakSound)
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), BoneBreakSound, PlayerOwnerRef->GetActorLocation());
 
 		// Damage player
 		PlayerOwnerRef->HealthReduction(DamageAmount);
