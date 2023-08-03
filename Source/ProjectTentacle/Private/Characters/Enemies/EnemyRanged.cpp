@@ -73,7 +73,7 @@ AActor* AEnemyRanged::GetDamageActorByLineTrace()
 	// Capsule trace by channel
 	const FVector CurrentPos = GetActorLocation();
 	const FVector FacingDir = GetActorForwardVector();
-	const FVector AimingDestination = CurrentPos + (FacingDir * AimingRange);
+	const FVector AimingDestination = CurrentPos + (FacingDir * 3000);
 	
 	const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, CurrentPos, AimingDestination, UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
 
@@ -175,8 +175,17 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 	SpawnOrCollapsePlayerHUD(false);
 	StopCheckInSightTimer();
 
-	AActor* SupposeDamageActor = GetDamageActorByLineTrace();
+	// Play fire sound and VFX
+	const FVector MuzzlePos = RifleMeshRef ? RifleMeshRef->GetSocketLocation("Muzzle") : GetActorLocation();
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), RifleFireSound, MuzzlePos);
 
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_MuzzleFire, MuzzlePos);
+
+	SpawnBullet(MuzzlePos);
+
+
+	
+	AActor* SupposeDamageActor = GetDamageActorByLineTrace();
 	if(!SupposeDamageActor) return;
 
 	
@@ -216,6 +225,13 @@ void AEnemyRanged::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AA
 	
 	// if bool StateChanged is false, it means enemy is not taking damage when it get countered or get damaged while doing attack
 	if(!StateChanged) TrySwitchEnemyState(EEnemyCurrentState::Damaged);
+}
+
+void AEnemyRanged::OnReloading_Implementation()
+{
+	IEnemyRangeInterface::OnReloading_Implementation();
+
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), RifleReloadSound, GetActorLocation());
 }
 
 

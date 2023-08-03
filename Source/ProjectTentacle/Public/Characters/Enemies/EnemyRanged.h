@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Characters/Base/EnemyRangeInterface.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "EnemyRanged.generated.h"
 
 /**
@@ -15,13 +17,20 @@ class PROJECTTENTACLE_API AEnemyRanged : public AEnemyBase, public IEnemyRangeIn
 {
 	GENERATED_BODY()
 
+private:
+
+	AActor* RifleActor;
+
+	UStaticMeshComponent* RifleMeshRef;
+
+	
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
 	float AimTimeToShoot = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
-	float AimingRange = 1500.0f;
+	float AimingRange = 3000.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
 	UAnimMontage* KneelDownToAimAnim;
@@ -35,13 +44,31 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
 	UAnimMontage* StandUpAnim;
 
+
+	
+
+	
 	
 	FTimerHandle AimingTimerHandle;
 	FTimerHandle CheckInSightTimerHandle;
 
-	float CheckInSightTick = 0.01f; 
+	float CheckInSightTick = 0.01f;
+
 	
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UNiagaraSystem* NS_MuzzleFire;
+	
+	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* RifleReloadSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* RifleFireSound;
+
+
+	
 	UFUNCTION()
 	void BeginFire();
 
@@ -50,8 +77,14 @@ protected:
 
 	virtual void OnDeath() override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SpawnBullet(FVector MuzzlePos);
+
 public:
 
+
+	UFUNCTION(BlueprintCallable)
+	void InitializeRifleMeshRef(UStaticMeshComponent* NewRifleMeshRef) {RifleMeshRef = NewRifleMeshRef;}
 
 	virtual void ExecuteAttack() override;
 
@@ -65,7 +98,7 @@ public:
 
 	virtual void ReceiveDamageFromPlayer_Implementation(float DamageAmount, AActor* DamageCauser, EPlayerAttackType PlayerAttackType) override;
 
-	
+	virtual void OnReloading_Implementation() override;
 
 private:
 

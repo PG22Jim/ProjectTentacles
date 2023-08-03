@@ -3,10 +3,12 @@
 
 #include "Characters/Player/PlayerActionComponent.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Encounter/SwampWater.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -1017,6 +1019,25 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 			if(ResumeMovementDamagingActor)
 				ResumeMovementDamagingActor->TryResumeMoving();
 		}
+
+		// Play Sound
+		USoundBase* BoneBreakSound = PlayerOwnerRef->GetBoneBreakSound();
+		if(BoneBreakSound)
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), BoneBreakSound, PlayerOwnerRef->GetActorLocation());
+
+		// Play hit effect
+		UNiagaraSystem* NiagaraHitEffect = PlayerOwnerRef->GetNSHitEffect();
+		UParticleSystem* CascadeHitEffect = PlayerOwnerRef->GetPHitEffect();
+		const bool IsNiagara = PlayerOwnerRef->IsUsingNiagara();
+		
+		const FVector SelfPos = PlayerOwnerRef->GetActorLocation();
+		const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - SelfPos);
+		const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
+		if(IsNiagara && NiagaraHitEffect)
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraHitEffect, VFXSpawnPos);
+		else if(CascadeHitEffect)
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos);
+		
 
 		// Damage player
 		PlayerOwnerRef->HealthReduction(DamageAmount);

@@ -581,6 +581,13 @@ void APlayerCharacter::DamagingTarget_Implementation()
 	Super::DamagingTarget_Implementation();
 
 	if(DamagingActor == nullptr) return;
+
+	if(PunchSound && TentacleImpulseSound)
+	{
+		const FVector TentacleAttackPos = GetMesh()->GetSocketLocation("TentacleSocket");
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), PunchSound, TentacleAttackPos);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), TentacleImpulseSound, TentacleAttackPos);
+	}
 	
 	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, bIsOHKOEnabled ? OHKODamage: CurrentDamage, this, CurrentAttackType);
 

@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBaseController.h"
@@ -56,8 +57,10 @@ void AEnemyBase::ReceiveDamageFromPlayer_Implementation(float DamageAmount, AAct
 			TryGetOwnController();
 			OwnController->RegisterCompletedAttack();
 		}
-
 	}
+
+	PlayReceiveDamageSound();
+	PlayReceiveDamageVFX(DamageCauser->GetActorLocation());
 
 	if(Health > 0)
 	{
@@ -357,9 +360,22 @@ void AEnemyBase::PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType
 	}
 }
 
+void AEnemyBase::PlayReceiveDamageSound()
+{
+	if(BoneBreakSound)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), BoneBreakSound, GetActorLocation());
+}
 
-
-
+void AEnemyBase::PlayReceiveDamageVFX(FVector DamageInstigatorPos)
+{
+	const FVector SelfPos = GetActorLocation();
+	const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageInstigatorPos - SelfPos);
+	const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
+	if(UseNiagara_HitEffect && NS_HitEffect)
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos);
+	else if(C_HitEffect)
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), C_HitEffect, VFXSpawnPos);
+}
 
 
 void AEnemyBase::TryClearFromPlayerTarget()

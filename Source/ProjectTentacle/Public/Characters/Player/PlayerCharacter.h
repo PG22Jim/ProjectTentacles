@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "AttachingTentacle.h"
 #include "GenericTeamAgentInterface.h"
+#include "NiagaraSystem.h"
 #include "PlayerCameraInterface.h"
 #include "PlayerDamageInterface.h"
 #include "Characters/Base/BaseCharacter.h"
+#include "Characters/Base/VFXAndSoundInterface.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -71,7 +73,7 @@ DECLARE_DYNAMIC_DELEGATE(FOnEnableComboResetTimer);
  * 
  */
 UCLASS()
-class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IPlayerDamageInterface, public IPlayerCameraInterface
+class PROJECTTENTACLE_API APlayerCharacter : public ABaseCharacter, public IGenericTeamAgentInterface, public IPlayerDamageInterface, public IPlayerCameraInterface, public IVFXAndSoundInterface
 {
 	GENERATED_BODY()
 
@@ -120,6 +122,17 @@ private:
 
 	
 protected:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	bool UseNiagara = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UNiagaraSystem* NS_HitEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UParticleSystem* C_HitEffect;
+
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
 	float ResetTime = 5.f;
 	
@@ -267,6 +280,22 @@ protected:
 
 	// Timer Handle for resume simulate physics setting
 	FTimerHandle ResumeSimulatePhysicTimer;
+
+	
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* BoneBreakingSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* PunchSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	USoundBase* TentacleImpulseSound;
+
+
+	
+
 	
 	
 	// input key variables to check
@@ -389,6 +418,13 @@ public:
 	// ================================================= Debug ============================================================
 	
 	// ================================================= Get And Set Functions ============================================
+
+	USoundBase* GetBoneBreakSound() const {return BoneBreakingSound;}
+
+	bool IsUsingNiagara() const {return UseNiagara;}
+	UNiagaraSystem* GetNSHitEffect() const {return NS_HitEffect;}
+	UParticleSystem* GetPHitEffect() const {return C_HitEffect;}
+	
 	bool GetAbleRotateVision() const {return AbleRotateVision;}
 	
 	FInputDirection GetPlayerInputDir() const {return InputDirection;}

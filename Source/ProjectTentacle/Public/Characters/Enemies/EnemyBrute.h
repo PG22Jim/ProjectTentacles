@@ -72,6 +72,10 @@ protected:
 	// bool to check if enemy is in counter state
 	UPROPERTY(BlueprintReadOnly)
 	bool IsCountered = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UNiagaraSystem* NS_JumpSlam;
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_General)
 	EBruteAttackType DebugAttackType;
