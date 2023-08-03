@@ -30,7 +30,7 @@ protected:
 	float AimTimeToShoot = 3.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
-	float AimingRange = 1500.0f;
+	float AimingRange = 3000.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttackSetting_Range)
 	UAnimMontage* KneelDownToAimAnim;
@@ -76,6 +76,9 @@ protected:
 	void InSightConditionUpdate();
 
 	virtual void OnDeath() override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SpawnBullet(FVector MuzzlePos);
 
 public:
 

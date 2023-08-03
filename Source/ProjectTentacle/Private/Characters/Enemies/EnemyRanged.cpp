@@ -73,7 +73,7 @@ AActor* AEnemyRanged::GetDamageActorByLineTrace()
 	// Capsule trace by channel
 	const FVector CurrentPos = GetActorLocation();
 	const FVector FacingDir = GetActorForwardVector();
-	const FVector AimingDestination = CurrentPos + (FacingDir * AimingRange);
+	const FVector AimingDestination = CurrentPos + (FacingDir * 3000);
 	
 	const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, CurrentPos, AimingDestination, UEngineTypes::ConvertToTraceType(ECC_Camera),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
 
@@ -181,7 +181,7 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_MuzzleFire, MuzzlePos);
 
-	
+	SpawnBullet(MuzzlePos);
 
 
 	
