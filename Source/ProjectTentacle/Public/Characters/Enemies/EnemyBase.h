@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EnemyBaseController.h"
 #include "EnemyType.h"
+#include "NiagaraSystem.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "Characters/Base/CharacterActionInterface.h"
 #include "Characters/Base/DamageInterface.h"
@@ -112,6 +113,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	bool UseNiagara_HitEffect = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UNiagaraSystem* NS_HitEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UParticleSystem* C_HitEffect;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* BoneBreakSound;
@@ -200,6 +211,8 @@ protected:
 	void PlayReceiveDamageAnimation(EPlayerAttackType ReceivedAttackType);
 
 	void PlayReceiveDamageSound();
+
+	void PlayReceiveDamageVFX(FVector DamageInstigatorPos);
 	
 	void HealthReduction(float DamageAmount);
 	

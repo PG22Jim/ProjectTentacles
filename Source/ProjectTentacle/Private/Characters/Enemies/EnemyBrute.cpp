@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyBrute.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Characters/Player/PlayerDamageInterface.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,8 +39,9 @@ void AEnemyBrute::Tick(float DeltaSeconds)
 void AEnemyBrute::TryToDamagePlayer_Implementation()
 {
 	Super::TryToDamagePlayer_Implementation();
-
+	
 	if(IsSecondAttack || BruteAttack == EBruteAttackType::JumpSlam) TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
+
 	
 	TArray<AActor*> FoundActorList = GetActorsInFrontOfEnemy(true);
 
@@ -50,6 +52,8 @@ void AEnemyBrute::TryToDamagePlayer_Implementation()
 			IPlayerDamageInterface::Execute_ReceiveDamageFromEnemy(EachFoundActor, BaseDamageAmount, this, CurrentAttackType);
 		}
 	}
+
+	
 }
 
 void AEnemyBrute::TryTriggerPlayerCounter_Implementation()
@@ -145,6 +149,23 @@ void AEnemyBrute::OnDealAoeDamage_Implementation()
 {
 	Super::OnDealAoeDamage_Implementation();
 
+	if(NS_JumpSlam)
+	{
+		// Hit result
+		FHitResult Hit;
+		// Empty array of ignoring actor, maybe add Enemies classes to be ignored
+		TArray<AActor*> IgnoreActors;
+		IgnoreActors.Add(this);
+
+		const FVector TraceStart = GetActorLocation();
+		FVector DownEnd = TraceStart;
+		DownEnd.Z -= 200.0f;
+		const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, TraceStart, DownEnd, UEngineTypes::ConvertToTraceType(ECC_Visibility),false, IgnoreActors,  EDrawDebugTrace::None,Hit,true);
+		const FVector VFXSpawnPos = bHit ? Hit.Location : GetActorLocation();
+		
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_JumpSlam, VFXSpawnPos);
+	}
+	
 	TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
 	
 	TArray<AActor*> FoundActorList = GetActorsAroundEnemy();

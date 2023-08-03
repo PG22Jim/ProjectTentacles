@@ -176,10 +176,14 @@ void AEnemyRanged::TryToDamagePlayer_Implementation()
 	StopCheckInSightTimer();
 
 	// Play fire sound and VFX
-
-	
 	const FVector MuzzlePos = RifleMeshRef ? RifleMeshRef->GetSocketLocation("Muzzle") : GetActorLocation();
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), RifleFireSound, MuzzlePos);
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_MuzzleFire, MuzzlePos);
+
+	
+
+
 	
 	AActor* SupposeDamageActor = GetDamageActorByLineTrace();
 	if(!SupposeDamageActor) return;

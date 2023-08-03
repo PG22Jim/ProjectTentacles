@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Characters/Base/EnemyRangeInterface.h"
 #include "Characters/Enemies/EnemyBase.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "EnemyRanged.generated.h"
 
 /**
@@ -52,7 +54,12 @@ protected:
 
 	float CheckInSightTick = 0.01f;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	UNiagaraSystem* NS_MuzzleFire;
+	
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* RifleReloadSound;
