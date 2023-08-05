@@ -38,6 +38,7 @@ void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 {
 	// Early return if encounter has already begun or player hasn't enter encounter
 	if(bIsEncounterActive || bIsEncounterComplete || !IsPlayerInsideEncounter) return;
+	UpdateTutorial();
 	
 	bIsEncounterActive = true;
 	EngageContainedUnits(Target);

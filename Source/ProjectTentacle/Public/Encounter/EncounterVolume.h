@@ -25,7 +25,9 @@ public:
 	// Try to start the encounter, if it hasn't already
 	UFUNCTION()
 	void TryTriggerEncounter(AActor* Target);
-	
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateTutorial();
 	
 	// Return list of contained units excluding passed pawn
 	TArray<AEnemyBase*> GetAlliesForPawn(APawn* Pawn);
