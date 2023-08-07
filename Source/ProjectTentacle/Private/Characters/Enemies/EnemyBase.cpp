@@ -372,9 +372,9 @@ void AEnemyBase::PlayReceiveDamageVFX(FVector DamageInstigatorPos)
 	const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageInstigatorPos - SelfPos);
 	const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
 	if(UseNiagara_HitEffect && NS_HitEffect)
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleEffectScale);
 	else if(C_HitEffect)
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), C_HitEffect, VFXSpawnPos);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), C_HitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleEffectScale);
 }
 
 

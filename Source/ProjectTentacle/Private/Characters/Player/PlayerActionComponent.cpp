@@ -1029,14 +1029,15 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 		UNiagaraSystem* NiagaraHitEffect = PlayerOwnerRef->GetNSHitEffect();
 		UParticleSystem* CascadeHitEffect = PlayerOwnerRef->GetPHitEffect();
 		const bool IsNiagara = PlayerOwnerRef->IsUsingNiagara();
+		const FVector ParticleScale = PlayerOwnerRef->GetParticleEffectScale();
 		
 		const FVector SelfPos = PlayerOwnerRef->GetActorLocation();
 		const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - SelfPos);
 		const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
 		if(IsNiagara && NiagaraHitEffect)
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraHitEffect, VFXSpawnPos);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraHitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleScale);
 		else if(CascadeHitEffect)
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos);
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleScale);
 		
 
 		// Damage player

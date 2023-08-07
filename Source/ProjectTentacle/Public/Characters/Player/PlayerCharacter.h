@@ -124,6 +124,9 @@ private:
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	FVector ParticleEffectScale = FVector(1,1,1);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
 	bool UseNiagara = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
@@ -424,6 +427,7 @@ public:
 	bool IsUsingNiagara() const {return UseNiagara;}
 	UNiagaraSystem* GetNSHitEffect() const {return NS_HitEffect;}
 	UParticleSystem* GetPHitEffect() const {return C_HitEffect;}
+	FVector GetParticleEffectScale() const {return ParticleEffectScale;}
 	
 	bool GetAbleRotateVision() const {return AbleRotateVision;}
 	

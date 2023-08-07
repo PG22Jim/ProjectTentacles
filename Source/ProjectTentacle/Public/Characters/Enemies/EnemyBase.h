@@ -115,6 +115,9 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	FVector ParticleEffectScale = FVector(1,1,1);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
 	bool UseNiagara_HitEffect = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
