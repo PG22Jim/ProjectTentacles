@@ -11,4 +11,5 @@ void UWidget_EnemyBaseUserWidget::ShowIndicator()
 void UWidget_EnemyBaseUserWidget::UnShowIndicator()
 {
 	IndicationImage->SetVisibility(ESlateVisibility::Hidden);
+	StopAllAnimations();
 }

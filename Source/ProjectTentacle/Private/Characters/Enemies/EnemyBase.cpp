@@ -3,6 +3,7 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -372,9 +373,9 @@ void AEnemyBase::PlayReceiveDamageVFX(FVector DamageInstigatorPos)
 	const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageInstigatorPos - SelfPos);
 	const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
 	if(UseNiagara_HitEffect && NS_HitEffect)
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleEffectScale);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos)->SetNiagaraVariableVec3("Particles.Scale", ParticleEffectScale);
 	else if(C_HitEffect)
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), C_HitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleEffectScale);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), C_HitEffect, VFXSpawnPos);
 }
 
 
@@ -398,10 +399,12 @@ void AEnemyBase::OnDeath()
 	// Clear from player's target reference
 	TryClearFromPlayerTarget();
 
+	
+	OnHideAttackIndicator();
+
 	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
 	{
 		TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
-		OnHideAttackIndicator();
 		StopAnimMontage();
 	}
 	
