@@ -23,12 +23,12 @@ public:
 protected:
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseTurnRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category=Camera)
+	float BaseTurnRate = 1.0f;
 
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseLookUpRate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category=Camera)
+	float BaseLookUpRate = 1.0f;
 
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=CharacterProperty)
