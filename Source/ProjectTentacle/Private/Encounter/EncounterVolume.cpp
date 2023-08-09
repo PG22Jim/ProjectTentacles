@@ -106,8 +106,10 @@ void AEncounterVolume::RegisterUnitDestroyed(AEnemyBaseController* Unit, bool bF
 					ICharacterActionInterface::Execute_OnEnterOrExitCombat(PlayerCha, false);
 				}
 			}
-
 		}
+
+		if(IsLastEncounter) OnPlayerWin();
+			
 	}
 
 	if(bForceDespawn)

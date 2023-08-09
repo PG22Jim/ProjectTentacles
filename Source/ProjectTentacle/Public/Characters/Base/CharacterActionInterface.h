@@ -74,6 +74,9 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnEnterOrExitCombat(bool bEnterCombat);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void OnShowingGameOverScreen();
 	
 	
 	// Enemy Delegate

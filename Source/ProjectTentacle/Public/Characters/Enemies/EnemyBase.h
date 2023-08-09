@@ -103,6 +103,9 @@ protected:
 	AEnemyBaseController* OwnController;
 	
 	// Enemy Property variable
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
+	bool EnableFailSafeDeath = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	float Health = 10;
@@ -114,6 +117,9 @@ protected:
 	EEnemyCurrentState CurrentEnemyState = EEnemyCurrentState::WaitToAttack;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	FString ParticleScaleParameterName = "Scale";
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
 	FVector ParticleEffectScale = FVector(1,1,1);
 	
@@ -130,6 +136,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	USoundBase* BoneBreakSound;
 
+
+	// Timer Handle for fail safe kill
+	FTimerHandle FailSafeCheckTimer;
 	
 	bool IsDead = false;
 
@@ -240,6 +249,8 @@ protected:
 
 	FVector GetVerticalUpdatedMovePos(const FVector SupposeMovingPos, const bool bIsMovementVerticalInclude, const float GroundAlpha, const float CapHalfHeight, TArray<AActor*> IgnoringActors);
 
+	UFUNCTION()
+	void FailSafeCheck();
 	
 public:
 	virtual void Reset() override;

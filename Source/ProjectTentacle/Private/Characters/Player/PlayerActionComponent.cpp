@@ -1039,26 +1039,31 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 		else if(CascadeHitEffect)
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleScale);
 		
-
-		// Damage player
-		PlayerOwnerRef->HealthReduction(DamageAmount);
-
 		// Set combo count to zero
 		ResetComboCount();
 		ClearComboResetTimer();
-
-		// Player Play receiving damage montage
-		if(ReceiveDamageMontage == nullptr) return;
-
-		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
-
-		// 
+		
 		// Instant Rotate to enemy
 		const FVector DamageCauserLocation = DamageCauser->GetActorLocation();
 		FVector PlayerLocation = PlayerOwnerRef->GetActorLocation();
 		PlayerLocation.Z = DamageCauserLocation.Z;
 		const FVector FacingEnemyDir = UKismetMathLibrary::Normal( DamageCauserLocation - PlayerLocation);
 		InstantRotation(FacingEnemyDir);
+
+		
+		// Damage player
+		PlayerOwnerRef->HealthReduction(DamageAmount);
+		if(PlayerOwnerRef->GetCurrentCharacterHealth() <= 0)
+		{
+			PlayerOwnerRef->OnDeath();
+			return;
+		}
+
+		// Player Play receiving damage montage
+		if(ReceiveDamageMontage == nullptr) return;
+
+		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
+
 	
 		CurrentPlayingMontage = ReceiveDamageMontage;
 		
