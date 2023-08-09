@@ -106,6 +106,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
 	bool EnableFailSafeDeath = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
+	float FailSafeTriggerHeight = 55;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = EnemyProperty)
 	float Health = 10;

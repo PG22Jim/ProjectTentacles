@@ -587,19 +587,8 @@ FVector AEnemyBase::GetVerticalUpdatedMovePos(const FVector SupposeMovingPos, co
 
 void AEnemyBase::FailSafeCheck()
 {
-	FHitResult Hit;
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(this);
-	const FVector StartPos = GetActorLocation();
-	const bool IsHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartPos, StartPos + ((GetActorUpVector() * -1) * 200), UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
-
-	if(IsHit)
-	{
-		if(ASwampWater* CastSwampResult = Cast<ASwampWater>(Hit.Actor))
-		{
-			ReceiveDamageFromPlayer_Implementation(1000, UGameplayStatics::GetPlayerCharacter(GetWorld(), 0), EPlayerAttackType::LongMeleeAttack);
-		}
-	}
+	if(GetActorLocation().Z < FailSafeTriggerHeight)
+		ReceiveDamageFromPlayer_Implementation(1000, UGameplayStatics::GetPlayerCharacter(GetWorld(), 0), EPlayerAttackType::LongMeleeAttack);
 }
 
 void AEnemyBase::StartAttackTimeout()

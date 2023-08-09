@@ -41,20 +41,10 @@ void APlayerCharacter::DealSwampDamage(float Damage, float TickTime)
 
 void APlayerCharacter::FailSafeCheck()
 {
-	FHitResult Hit;
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(this);
-	const FVector StartPos = GetActorLocation();
-	const bool IsHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartPos, StartPos + ((GetActorUpVector() * -1) * 200), UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
-
-	if(IsHit)
-	{
-		if(ASwampWater* CastSwampResult = Cast<ASwampWater>(Hit.Actor))
-		{
-			ReceiveDamageFromEnemy_Implementation(1000, CastSwampResult, EEnemyAttackType::UnableToCounter);
-		}
-	}
 	
+	if(GetActorLocation().Z < FailSafeTriggerHeight)
+		ReceiveDamageFromEnemy_Implementation(1000, this, EEnemyAttackType::UnableToCounter);
+
 }
 
 void APlayerCharacter::ToggleOHKO()

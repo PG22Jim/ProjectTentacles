@@ -136,7 +136,10 @@ protected:
 
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
-	bool EnableFailSafeDeath = false; 
+	bool EnableFailSafeDeath = false;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
+	float FailSafeTriggerHeight = 40;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
 	float ResetTime = 5.f;
