@@ -7,6 +7,7 @@
 #include "ProjectTentacleGameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Encounter/SwampWater.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -36,6 +37,14 @@ void APlayerCharacter::DealSwampDamage(float Damage, float TickTime)
 	if(!bTakingSwampDamage) return;
 	FTimerHandle SwampDamageTimer;
 	GetWorldTimerManager().SetTimer(SwampDamageTimer, SwampDamageDelegate, TickTime, false);
+}
+
+void APlayerCharacter::FailSafeCheck()
+{
+	
+	if(GetActorLocation().Z < FailSafeTriggerHeight)
+		ReceiveDamageFromEnemy_Implementation(1000, this, EEnemyAttackType::UnableToCounter);
+
 }
 
 void APlayerCharacter::ToggleOHKO()
@@ -209,6 +218,13 @@ void APlayerCharacter::BeginPlay()
 	if(InstanceRef && InstanceRef->ShouldSaveAtPCSpawn()) InstanceRef->SaveGame();
 
 	InCombatCameraSocketOffset = CombatSpringArm->SocketOffset;
+
+	if(EnableFailSafeDeath)
+	{
+		const UWorld* World = GetWorld();
+		if(World == nullptr) return;
+		World->GetTimerManager().SetTimer(FailSafeCheckTimer,this, &APlayerCharacter::FailSafeCheck, 1, true, -1);
+	}
 }
 
 void APlayerCharacter::Tick(float DeltaSeconds)
@@ -243,18 +259,18 @@ void APlayerCharacter::Tick(float DeltaSeconds)
 void APlayerCharacter::LookUpAtRate(float Value)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Value * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	if(!bIsDead) AddControllerPitchInput(Value * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
 void APlayerCharacter::TurnAtRate(float Value)
 {
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	if(!bIsDead) AddControllerYawInput(Value * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void APlayerCharacter::MoveForward(float Value)
 {
-	if ((Controller != nullptr) && (Value != 0.0f))
+	if ((Controller != nullptr) && (Value != 0.0f) && !bIsDead)
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -273,7 +289,7 @@ void APlayerCharacter::MoveForward(float Value)
 
 void APlayerCharacter::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f))
+	if ( (Controller != nullptr) && (Value != 0.0f) && !bIsDead)
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -295,7 +311,7 @@ void APlayerCharacter::MoveRight(float Value)
 void APlayerCharacter::TryMeleeAttack()
 {
 	// if player is recovering from action or is dodging, return
-	if(CanPerformAttack())
+	if(CanPerformAttack() && !bIsDead)
 	{
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Attack);
 		if(bExecuted) TentacleOnRightHand->SetTentacleInvisible();
@@ -308,7 +324,7 @@ void APlayerCharacter::TryEvade()
 {
 	// if player is able to dodge, make dodge
 	//if(CheckCanPerformAction())
-	if(IsPlayerCounterable && CounteringVictim && (CurrentActionState != EActionState::SpecialAttack && CurrentActionState != EActionState::Dodge))
+	if((IsPlayerCounterable && CounteringVictim && (CurrentActionState != EActionState::SpecialAttack && CurrentActionState != EActionState::Dodge)) && !bIsDead)
 		bool bExecuted = OnExecutePlayerAction.ExecuteIfBound(EActionState::Evade);
 }
 
@@ -316,7 +332,7 @@ void APlayerCharacter::TryEvade()
 void APlayerCharacter::TryDodge()
 {
 	// if player is able to dodge, make dodge
-	if(CanPerformDodge() && CurrentStamina > CostForEachDodge)
+	if(CanPerformDodge() && CurrentStamina > CostForEachDodge && !bIsDead)
 	{
 		StopAnimMontage();	
 		StopRegenerateStamina();
@@ -440,6 +456,12 @@ void APlayerCharacter::OnEnterCombatCameraUpdate(float Alpha)
 	CombatSpringArm->SocketOffset = CurrentSocketOffset;
 }
 
+void APlayerCharacter::OnResetPlayerProperty()
+{
+	bIsDead = false;
+	CharacterCurrentHealth = CharacterMaxHealth;
+}
+
 void APlayerCharacter::SetRangeAimingEnemy(AEnemyBase* NewRegisteringActor, float HUDRemainTime)
 {
 	if(RangeAimingEnemy != NewRegisteringActor)
@@ -488,10 +510,15 @@ void APlayerCharacter::RegeneratingStamina()
 
 void APlayerCharacter::OnDeath()
 {
-	bIsDead = true;
-	FTimerHandle DeathResetTimer;
+	if(!DeathAnimation) return;
 	
-	GetWorldTimerManager().SetTimer(DeathResetTimer, this, &APlayerCharacter::ResetPostDeath, ResetTime);
+	bIsDead = true;
+	// FTimerHandle DeathResetTimer;
+	//
+	// GetWorldTimerManager().SetTimer(DeathResetTimer, this, &APlayerCharacter::ResetPostDeath, ResetTime);
+
+	StopAnimMontage();
+	PlayAnimMontage(DeathAnimation, 1, NAME_None);
 }
 
 void APlayerCharacter::ResetPostDeath()
@@ -559,8 +586,6 @@ void APlayerCharacter::StopRegenerateStamina()
 void APlayerCharacter::HealthReduction(int32 ReducingAmount)
 {
 	CharacterCurrentHealth = FMath::Clamp((CharacterCurrentHealth - ReducingAmount),0.f, CharacterMaxHealth);
-
-	if(CharacterCurrentHealth <= 0.f) OnDeath();
 }
 
 // =============================================== Special Ability ===================================================
@@ -644,7 +669,8 @@ void APlayerCharacter::ReceiveDamageFromEnemy_Implementation(int32 DamageAmount,
 {
 	IPlayerDamageInterface::ReceiveDamageFromEnemy_Implementation(DamageAmount, DamageCauser, EnemyAttackType);
 
-	bool bExecuted = OnReceivingIncomingDamage.ExecuteIfBound(DamageAmount, DamageCauser, EnemyAttackType);
+	if(!bIsDead)
+		bool bExecuted = OnReceivingIncomingDamage.ExecuteIfBound(DamageAmount, DamageCauser, EnemyAttackType);
 }
 
 void APlayerCharacter::OnSwitchingToExecutionCamera_Implementation()
@@ -766,6 +792,13 @@ void APlayerCharacter::OnEnterOrExitCombat_Implementation(bool bEnterCombat)
 	}
 
 
+}
+
+void APlayerCharacter::OnShowingGameOverScreen_Implementation()
+{
+	Super::OnShowingGameOverScreen_Implementation();
+
+	ShowGameOverMenu();
 }
 
 

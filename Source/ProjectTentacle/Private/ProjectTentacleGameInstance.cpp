@@ -116,8 +116,14 @@ void UProjectTentacleGameInstance::KillActiveUnits()
 
 void UProjectTentacleGameInstance::ReloadLastSave()
 {
+	TryCachePC();
+	if(!PC) return;
+
+	PC->OnResetPlayerProperty();
+	
 	FAsyncLoadGameFromSlotDelegate LoadDelegate;
 	LoadDelegate.BindUFunction(this, FName("OnSaveLoad"));
 
+	
 	UGameplayStatics::AsyncLoadGameFromSlot(SaveObject->GetSlotName(), SaveObject->GetSlotIndex(), LoadDelegate);
 }

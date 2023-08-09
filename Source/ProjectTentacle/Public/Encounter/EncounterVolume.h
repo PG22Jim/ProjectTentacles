@@ -90,6 +90,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	bool IsPlayerInsideEncounter = false;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
+	bool IsLastEncounter = false;
+	
 	// Set of all contained units at any time
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Combat)
 	TSet<AEnemyBase*> ContainedUnits;
@@ -137,6 +140,9 @@ protected:
 	void PCCounterStart();
 	UFUNCTION()
 	void PCCounterStop();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void OnPlayerWin();
 	
 private:
 	// Called on begin play and reset
