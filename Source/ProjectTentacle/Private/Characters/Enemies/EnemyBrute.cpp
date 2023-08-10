@@ -346,7 +346,7 @@ void AEnemyBrute::ExecuteAttack()
 			if(NotCounterableAttackMontage)
 				PlayAnimMontage(NotCounterableAttackMontage, 1, "Default");
 			DoesPlayerDodge = false;
-		
+			OnBeginCharging();
 			break;
 		case EBruteAttackType::JumpSlam:
 			if(JumpSlamAttack)
@@ -551,6 +551,10 @@ void AEnemyBrute::OnCancelCharge(const bool bHitWall)
 	SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
 	OnSetFocus();
 	TryResumeMoving();
+	SpawnOrCollapsePlayerHUD(false);
+	const UWorld* World = GetWorld();
+	if(!World) return;
+	World->GetTimerManager().ClearTimer(CheckInSightTimerHandle);
 
 	// if charage cancel result is wall hitting, stun function
 	if(bHitWall) OnStunned();
@@ -714,10 +718,68 @@ TArray<AActor*> AEnemyBrute::GetActorsAroundEnemy()
 void AEnemyBrute::OnDeath()
 {
 	Super::OnDeath();
+
+	if(BruteAttack == EBruteAttackType::Charging)
+	{
+		// stop montage and timeline
+		StopAnimMontage();
+		ChargeMovingTimeline.Stop();
+		// reset capsule component collision , focus and MovementMode setting
+		SetCapsuleCompCollision(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
+		OnSetFocus();
+		TryResumeMoving();
+		SpawnOrCollapsePlayerHUD(false);
+		const UWorld* World = GetWorld();
+		if(!World) return;
+		World->GetTimerManager().ClearTimer(CheckInSightTimerHandle);
+	}
+	
 }
 
 void AEnemyBrute::TryStopAttackMovement()
 {
+}
+
+bool AEnemyBrute::TryCachePlayerRef()
+{
+	// early return Cache result to true if already has player character reference
+	if(PlayerRef) return true;
+
+	// if PlayerRef is nullptr, get player character from world
+	const UWorld* World = GetWorld();
+	if(!World) return false;
+	ACharacter* PlayerCha = UGameplayStatics::GetPlayerCharacter(World, 0);
+	if(!PlayerCha) return false;
+
+	APlayerCharacter* CastedResult = Cast<APlayerCharacter>(PlayerCha);
+	if(!CastedResult) return false;
+	
+	// if the result is not nullptr, store it and return Cache result to true
+	PlayerRef = CastedResult;
+	return true;
+}
+
+void AEnemyBrute::SpawnOrCollapsePlayerHUD(bool bShow)
+{
+	const bool PlayerRefCacheResult = TryCachePlayerRef();
+
+	if(!PlayerRefCacheResult) return;
+
+	PlayerRef->SetRangeAimingEnemy(this, 5.0f);
+	
+	if(PlayerRef->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+		ICharacterActionInterface::Execute_OnShowPlayerIndicatorHUD(PlayerRef, bShow);
+}
+
+void AEnemyBrute::ShowOrHidePlayerHUD(bool bShow)
+{
+	const bool PlayerRefCacheResult = TryCachePlayerRef();
+	
+	if(!PlayerRefCacheResult) return;
+
+	if(PlayerRef->GetClass()->ImplementsInterface(UCharacterActionInterface::StaticClass()))
+		ICharacterActionInterface::Execute_OnChangePlayerIndicatorHUD_Visibility(PlayerRef, bShow);
+	
 }
 
 void AEnemyBrute::UpdateAttackingVariables()
@@ -750,6 +812,27 @@ void AEnemyBrute::UpdateAttackingVariables()
 	const float NumOfTickPerSecond = 1 / DeltaSecond;
 	TravelDistancePerTick = AttackTravelDistance / (TotalTravelTime * NumOfTickPerSecond);
 }
+
+void AEnemyBrute::OnBeginCharging()
+{
+	// Set timer to charge
+	const UWorld* World = GetWorld();
+	if(!World) return;
+	
+	// Show Player attack indicator HUD
+	SpawnOrCollapsePlayerHUD(true);
+
+	World->GetTimerManager().SetTimer(CheckInSightTimerHandle, this, &AEnemyBrute::InSightConditionUpdate, 0.01, true, -1);
+}
+
+void AEnemyBrute::InSightConditionUpdate()
+{
+	const bool IsInCameraSight = WasRecentlyRendered(0.01);
+
+	ShowOrHidePlayerHUD(IsInCameraSight);
+}
+
+
 
 bool AEnemyBrute::ShouldKeepCharging(FVector DirToPlayer)
 {

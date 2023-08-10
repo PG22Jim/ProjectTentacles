@@ -568,7 +568,7 @@ bool APlayerCharacter::HasSpaceToLand(FVector KnockingDir)
 	const FVector AssumeLandingStart = GetActorLocation() + (KnockingDir * 100.0f) + (GetActorUpVector() * 100.0f);
 	const FVector AssumeLandingEnd =  AssumeLandingStart + (GetActorUpVector() * -1 * 300.0f);
 	
-	const bool IsFloorHit = UKismetSystemLibrary::SphereTraceSingle(GetWorld(), AssumeLandingStart, AssumeLandingEnd, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::Persistent,Hit,true);
+	const bool IsFloorHit = UKismetSystemLibrary::SphereTraceSingle(GetWorld(), AssumeLandingStart, AssumeLandingEnd, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreActors, EDrawDebugTrace::None,Hit,true);
 	
 	return IsFloorHit;
 }
