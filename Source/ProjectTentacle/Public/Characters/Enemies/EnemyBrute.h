@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/Base/EnemyRangeInterface.h"
 #include "Characters/Enemies/EnemyBase.h"
 #include "Characters/Player/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
@@ -13,7 +14,7 @@
  * 
  */
 UCLASS(Blueprintable, BlueprintType)
-class PROJECTTENTACLE_API AEnemyBrute : public AEnemyBase
+class PROJECTTENTACLE_API AEnemyBrute : public AEnemyBase, public IEnemyRangeInterface
 {
 	GENERATED_BODY()
 
@@ -27,10 +28,14 @@ private:
 	void InitializeTimelineComp();
 	void TryStopAttackMovement();
 
+	bool TryCachePlayerRef();
+	void SpawnOrCollapsePlayerHUD(bool bShow);
+	void ShowOrHidePlayerHUD(bool bShow);
 
 	void PlaySpecificAttackMovingTimeline(EEnemyAttackType EnemyAttack);
 	void UpdateAttackingVariables();
-	
+
+	void OnBeginCharging();
 	void ChargeKnock(AActor* KnockingActor);
 	
 	void SetCapsuleCompCollision(ECollisionChannel ResponseChannel, ECollisionResponse RequestResponse);
@@ -177,6 +182,9 @@ protected:
 	UAnimMontage* UnableCounterAttackSecond;
 
 
+	FTimerHandle CheckInSightTimerHandle;
+
+	
 	void TryGetPlayerRef();
 	virtual void ExecuteAttack() override;
 
@@ -188,6 +196,8 @@ protected:
 	UFUNCTION()
 	void OnDealChargeDamage(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+	UFUNCTION()
+	void InSightConditionUpdate();
 	
 	void OnContinueSecondAttackMontage_Implementation() override;
 

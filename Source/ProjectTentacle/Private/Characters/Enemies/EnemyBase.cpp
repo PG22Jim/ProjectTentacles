@@ -3,12 +3,14 @@
 
 #include "Characters/Enemies/EnemyBase.h"
 
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Characters/Enemies/EnemyBaseController.h"
 #include "Characters/Player/PlayerDamageInterface.h"
 #include "Components/CapsuleComponent.h"
+#include "Encounter/SwampWater.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -84,6 +86,13 @@ void AEnemyBase::BeginPlay()
 	InitializeWidgetComponents();
 
 	InitializeEnemyControllerRef();
+
+	if(EnableFailSafeDeath)
+	{
+		const UWorld* World = GetWorld();
+		if(World == nullptr) return;
+		World->GetTimerManager().SetTimer(FailSafeCheckTimer,this, &AEnemyBase::FailSafeCheck, 1, true, -1);
+	}
 }
 
 void AEnemyBase::CheckForShackExit()
@@ -372,7 +381,7 @@ void AEnemyBase::PlayReceiveDamageVFX(FVector DamageInstigatorPos)
 	const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageInstigatorPos - SelfPos);
 	const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
 	if(UseNiagara_HitEffect && NS_HitEffect)
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NS_HitEffect, VFXSpawnPos)->SetNiagaraVariableVec3("Scale", ParticleEffectScale);
 	else if(C_HitEffect)
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), C_HitEffect, VFXSpawnPos);
 }
@@ -398,10 +407,12 @@ void AEnemyBase::OnDeath()
 	// Clear from player's target reference
 	TryClearFromPlayerTarget();
 
+	
+	OnHideAttackIndicator();
+
 	if(CurrentEnemyState == EEnemyCurrentState::Attacking)
 	{
 		TryFinishAttackTask(EEnemyCurrentState::WaitToAttack);
-		OnHideAttackIndicator();
 		StopAnimMontage();
 	}
 	
@@ -572,6 +583,12 @@ FVector AEnemyBase::GetVerticalUpdatedMovePos(const FVector SupposeMovingPos, co
 	if(!bIsMovementVerticalInclude) return bHitFloor ? (Hit.Location + (GetActorUpVector() * CapHalfHeight)) : SupposeMovingPos;
 
 	return bHitFloor && GroundAlpha >= 0.7f ? (Hit.Location + (GetActorUpVector() * CapHalfHeight)) : SupposeMovingPos;
+}
+
+void AEnemyBase::FailSafeCheck()
+{
+	if(GetActorLocation().Z < FailSafeTriggerHeight)
+		ReceiveDamageFromPlayer_Implementation(1000, UGameplayStatics::GetPlayerCharacter(GetWorld(), 0), EPlayerAttackType::LongMeleeAttack);
 }
 
 void AEnemyBase::StartAttackTimeout()

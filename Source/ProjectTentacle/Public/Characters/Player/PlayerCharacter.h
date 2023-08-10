@@ -91,7 +91,6 @@ private:
 	void RegeneratingStamina();
 
 	bool AbleRotateVision = true; 
-	void OnDeath();
 	void ResetPostDeath();
 	void TryCacheGameModeRef();
 	void TryCacheInstanceRef();
@@ -124,6 +123,9 @@ private:
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
+	FVector ParticleEffectScale = FVector(1,1,1);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
 	bool UseNiagara = true;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
@@ -132,6 +134,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= VFX)
 	UParticleSystem* C_HitEffect;
 
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
+	bool EnableFailSafeDeath = false;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Debug)
+	float FailSafeTriggerHeight = 40;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Death)
 	float ResetTime = 5.f;
@@ -255,7 +263,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
 	TArray<UAnimMontage*> MeleeAttackMontages;
 	
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= AnimMontages)
+	UAnimMontage* DeathAnimation;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= StaminaSetting)
 	float CurrentStamina = 100.0f;
 	
@@ -281,7 +291,9 @@ protected:
 	// Timer Handle for resume simulate physics setting
 	FTimerHandle ResumeSimulatePhysicTimer;
 
-	
+	// Timer Handle for fail safe kill
+	FTimerHandle FailSafeCheckTimer;
+
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
@@ -321,6 +333,9 @@ protected:
 
 	UFUNCTION()
 	void DealSwampDamage(float Damage, float TickTime);
+
+	UFUNCTION()
+	void FailSafeCheck();
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -414,16 +429,26 @@ public:
 	UFUNCTION()
 	void OnEnterCombatCameraUpdate(float Alpha);
 
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void ShowGameOverMenu();
+
+	void OnResetPlayerProperty();
+	
 
 	// ================================================= Debug ============================================================
 	
 	// ================================================= Get And Set Functions ============================================
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool GetIsDead() const {return bIsDead;}
+	void OnDeath();
+	
 	USoundBase* GetBoneBreakSound() const {return BoneBreakingSound;}
 
 	bool IsUsingNiagara() const {return UseNiagara;}
 	UNiagaraSystem* GetNSHitEffect() const {return NS_HitEffect;}
 	UParticleSystem* GetPHitEffect() const {return C_HitEffect;}
+	FVector GetParticleEffectScale() const {return ParticleEffectScale;}
 	
 	bool GetAbleRotateVision() const {return AbleRotateVision;}
 	
@@ -517,4 +542,7 @@ public:
 
 	UFUNCTION()
 	virtual void OnEnterOrExitCombat_Implementation(bool bEnterCombat) override;
+
+	UFUNCTION()
+	virtual void OnShowingGameOverScreen_Implementation() override;
 };

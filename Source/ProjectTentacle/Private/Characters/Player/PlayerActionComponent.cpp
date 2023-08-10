@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values for this component's properties
 UPlayerActionComponent::UPlayerActionComponent()
@@ -1029,35 +1030,42 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 		UNiagaraSystem* NiagaraHitEffect = PlayerOwnerRef->GetNSHitEffect();
 		UParticleSystem* CascadeHitEffect = PlayerOwnerRef->GetPHitEffect();
 		const bool IsNiagara = PlayerOwnerRef->IsUsingNiagara();
+		const FVector ParticleScale = PlayerOwnerRef->GetParticleEffectScale();
 		
 		const FVector SelfPos = PlayerOwnerRef->GetActorLocation();
 		const FVector DirToInstigator = UKismetMathLibrary::Normal(DamageCauser->GetActorLocation() - SelfPos);
 		const FVector VFXSpawnPos = SelfPos + (DirToInstigator * 75);
 		if(IsNiagara && NiagaraHitEffect)
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraHitEffect, VFXSpawnPos);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraHitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleScale);
 		else if(CascadeHitEffect)
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos);
+			if(UParticleSystemComponent* SpawnedCascade = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos))
+				SpawnedCascade->SetWorldScale3D(ParticleScale);
 		
-
-		// Damage player
-		PlayerOwnerRef->HealthReduction(DamageAmount);
-
 		// Set combo count to zero
 		ResetComboCount();
 		ClearComboResetTimer();
-
-		// Player Play receiving damage montage
-		if(ReceiveDamageMontage == nullptr) return;
-
-		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
-
-		// 
+		
 		// Instant Rotate to enemy
 		const FVector DamageCauserLocation = DamageCauser->GetActorLocation();
 		FVector PlayerLocation = PlayerOwnerRef->GetActorLocation();
 		PlayerLocation.Z = DamageCauserLocation.Z;
 		const FVector FacingEnemyDir = UKismetMathLibrary::Normal( DamageCauserLocation - PlayerLocation);
 		InstantRotation(FacingEnemyDir);
+
+		
+		// Damage player
+		PlayerOwnerRef->HealthReduction(DamageAmount);
+		if(PlayerOwnerRef->GetCurrentCharacterHealth() <= 0)
+		{
+			PlayerOwnerRef->OnDeath();
+			return;
+		}
+
+		// Player Play receiving damage montage
+		if(ReceiveDamageMontage == nullptr) return;
+
+		PlayerOwnerRef->SetCurrentActionState(EActionState::Recovering);
+
 	
 		CurrentPlayingMontage = ReceiveDamageMontage;
 		
