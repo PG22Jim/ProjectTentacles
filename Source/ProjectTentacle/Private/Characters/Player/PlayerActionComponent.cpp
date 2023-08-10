@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values for this component's properties
 UPlayerActionComponent::UPlayerActionComponent()
@@ -1037,7 +1038,8 @@ void UPlayerActionComponent::ReceivingDamage(int32 DamageAmount, AActor* DamageC
 		if(IsNiagara && NiagaraHitEffect)
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraHitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleScale);
 		else if(CascadeHitEffect)
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos, FRotator::ZeroRotator, ParticleScale);
+			if(UParticleSystemComponent* SpawnedCascade = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), CascadeHitEffect, VFXSpawnPos))
+				SpawnedCascade->SetWorldScale3D(ParticleScale);
 		
 		// Set combo count to zero
 		ResetComboCount();
