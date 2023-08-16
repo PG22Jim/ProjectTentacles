@@ -73,6 +73,10 @@ protected:
 	UFUNCTION()
 	void OnActorHitTriggerCollision(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 											UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnEncounterBegin_BP();
+
 	
 	// Area around the encounter to generate navigation
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

@@ -41,6 +41,7 @@ void AEncounterVolume::TryTriggerEncounter(AActor* Target)
 	UpdateTutorial();
 	
 	bIsEncounterActive = true;
+	OnEncounterBegin_BP();
 	EngageContainedUnits(Target);
 	TriggerNextWave();
 }

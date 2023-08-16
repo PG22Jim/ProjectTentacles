@@ -613,8 +613,10 @@ void APlayerCharacter::DamagingTarget_Implementation()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), PunchSound, TentacleAttackPos);
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), TentacleImpulseSound, TentacleAttackPos);
 	}
+
 	
-	IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, bIsOHKOEnabled ? OHKODamage: CurrentDamage, this, CurrentAttackType);
+	if(DamagingActor->GetClass()->ImplementsInterface(UDamageInterface::StaticClass()))
+		IDamageInterface::Execute_ReceiveDamageFromPlayer(DamagingActor, bIsOHKOEnabled ? OHKODamage: CurrentDamage, this, CurrentAttackType);
 
 	if(CurrentAttackType == EPlayerAttackType::CounterAttack) UnsetCurrentTarget();
 
